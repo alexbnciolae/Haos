@@ -1,0 +1,615 @@
+#include <iostream>
+#include <stdlib.h>
+#include <math.h>
+using namespace std;
+
+
+///------------------ Clasa monom = clasa din care nu deriveaza ---------------------
+class monom
+{
+private:
+    int grad;
+    float coef;
+public:
+    monom(int, float);
+    monom(monom&);
+    ~monom();
+    void set_grad(int);
+    void set_coef(float);
+    void citire(istream& in);
+    void afisare(ostream& out);
+
+    int get_grad()
+    {
+        return grad;
+    }
+
+    float get_coef()
+    {
+        return coef;
+    }
+
+
+    friend istream& operator>>(istream&, monom&); ///supraincarcare pe >>
+    friend ostream& operator<<(ostream&, monom&); ///supraincarcare pe <<
+    monom& operator = (monom& z); ///supraincarcare pe =
+};
+
+monom::monom(int grad = 0, float coef = 0)
+{
+    this->grad = grad;
+    this->coef = coef;
+}
+
+monom::monom(monom& z)
+{
+    this->grad = z.grad;
+    this->coef = z.coef;
+}
+
+monom::~monom()
+{
+    this->grad = 0;
+    this->coef = 0;
+}
+
+void monom::set_grad(int g)
+{
+    grad = g;
+}
+
+void monom::set_coef(float c)
+{
+    coef = c;
+}
+
+void monom::citire(istream& in)
+{
+    cout << "Citim grad:\n";
+    in >> grad;
+    cout << "Citim coeficient: \n";
+    in >> coef;
+}
+
+istream& operator>>(istream& in, monom& z)
+{
+    z.citire(in);
+    return in;
+}
+
+void monom::afisare(ostream& out)
+{
+    if (coef == 1 && grad == 1)
+        cout << "+x";
+    else if (grad == 0)
+        out << coef;
+    else if (coef == -1 && grad == 1)
+        cout << "-x";
+    else if (coef == -1)
+    {
+        cout << "-x^";
+        out << grad;
+    }
+    else if (coef == 1)
+    {
+        cout<<"x^";
+        out<<grad;
+    }
+    else if (grad == 1)
+    {
+        out<<coef;
+        cout<<"x";
+    }
+    else
+    {
+        out << coef;
+        cout << "x^";
+        out << grad;
+    }
+
+}
+
+
+ostream& operator<<(ostream& out, monom& z)
+{
+    z.afisare(out);
+    return out;
+}
+
+monom& monom::operator=(monom& z)
+{
+    if (this != &z)
+    {
+        this->grad = z.grad;
+        this->coef = z.coef;
+    }
+    return *this;
+
+}
+
+///----------------------Clasa polinom = clasa din care se deriveaza ------------------
+
+class polinom
+{
+protected:
+    int nr_monoame;
+    monom* m;
+public:
+    polinom(int, monom*);
+    polinom(polinom&);
+    virtual ~polinom();
+    virtual void set_nr_monoame(int);
+    virtual void set_m(monom*);
+    virtual void citire(istream& in);
+    virtual void afisare(ostream& out);
+
+    int get_nr_monoame()
+    {
+        return nr_monoame;
+    }
+
+    monom* get_m()
+    {
+        return m;
+    }
+
+    friend istream& operator>>(istream&, polinom&);  ///supraincarcare pe >>
+    friend ostream& operator<<(ostream&, polinom&);  ///supraincarcare pe <<
+    polinom& operator = (polinom& z); ///supraincarcare pe =
+};
+
+
+polinom::polinom(int nr_monoame = 0, monom* m = 0)
+{
+    int i;
+    this->nr_monoame = nr_monoame;
+    for (i = 0; i < nr_monoame; i++)
+    {
+        this->m[i] = m[i];
+    }
+}
+
+polinom::polinom(polinom& p)
+{
+    int i;
+    this->nr_monoame = p.nr_monoame;
+    for (i = 0; i < this->nr_monoame; i++)
+    {
+        this->m[i] = p.m[i];
+    }
+}
+
+polinom::~polinom()
+{
+    int i;
+    this->nr_monoame = 0;
+    for (i = 0; i < nr_monoame; i++)
+    {
+        m[i].set_grad(0);
+        m[i].set_coef(0);
+    }
+}
+
+void polinom::citire(istream& in)
+{
+    int i, cgrad, ccoef;
+    cout << "Citim numarul de monoame: ";
+    in >> nr_monoame;
+
+    m = new monom[nr_monoame + 1];
+    for (i = 0; i < nr_monoame; i++)
+    {
+        //        m[i] = new monom;
+        in >> m[i];
+    }
+}
+
+void polinom::set_nr_monoame(int nrm)
+{
+    nr_monoame = nrm;
+}
+
+void polinom::set_m(monom* vm)
+{
+    m = vm;
+}
+istream& operator>>(istream& in, polinom& p)
+{
+    p.citire(in);
+    return in;
+}
+
+void polinom::afisare(ostream& out)
+{
+    int i,j=0;
+    ///out<<nr_monoame;
+    out << m[0];
+    for (i = 1; i < nr_monoame; i++)
+    {
+        out<<m[i];
+        if(i!=nr_monoame-1 && m[i].get_coef() >= 0)
+            cout<<"+";
+        //   out<<m[i].get_grad;
+        //     out<<m[i].get_coef;
+    }
+    cout<<endl;
+}
+
+ostream& operator<<(ostream& out, polinom& p)
+{
+    p.afisare(out);
+    return out;
+}
+polinom& polinom::operator=(polinom& p)
+{
+    int i;
+    this->nr_monoame = p.nr_monoame;
+    for (i = 0; i < p.nr_monoame; i++)
+    {
+        this->m[i] = p.m[i];
+    }
+    return *this;
+
+}
+
+///=========================Polinom_ireductibil = prima clasa derivata a clasei de baza Polinom ------------------------------
+
+
+class polinom_ireductibil :public polinom
+{
+public:
+    polinom_ireductibil(int, monom*);
+    ~polinom_ireductibil();
+
+    virtual void citire(istream& in);
+    virtual void afisare(ostream& out);
+
+    friend istream& operator>>(istream&, polinom_ireductibil&);
+    friend ostream& operator<<(ostream&, polinom_ireductibil&);
+
+    int Eisenstein(int nr_monoame, monom* m)
+    {
+        int max_coef = -1, max_grad = -1, min_grad = 999999999999999;
+        int i, j, k, c, nr, d, h, b, a;
+        float kcoef;
+
+        for (i = 0; i < nr_monoame; i++)  ///for pentru a afla coeficientul maxim
+        {
+            kcoef = m[i].get_coef();
+            if (kcoef < 0)
+                kcoef = (-1) * kcoef;
+            if (kcoef > max_coef)
+                max_coef = kcoef;
+        }
+
+        for (i = 0; i < nr_monoame; i++)  ///for pentru a afla gradul minim
+        {
+            k = m[i].get_grad();
+            if (k < 0)
+                k = (-1) * k;
+            if (k < min_grad)
+                min_grad = k;
+        }
+
+        for (i = 0; i < nr_monoame; i++)  ///for pentru a afla gradul maxim
+        {
+            k = m[i].get_grad();
+            if (k < 0)
+                k = (-1) * k;
+            if (k > max_grad)
+                max_grad = k;
+        }
+
+        for (i = 2; i <= max_coef; i++) ///for pentru a afla cmmdc-ul a mai multor numere
+        {
+            c = 0;
+            for (j = 0; j < nr_monoame; j++)
+            {
+                k = m[j].get_coef();
+                if (k % i == 0)
+                    c++;
+            }
+            if (c == nr_monoame) ///Daca gasitm cmmmdc, criteriul lui Eisenstein nu este indeplinit si intoarcem 0.
+            {
+                ///cout << "Avem cmmdc, polinomul nu este ireductibil.\n";
+                ///cout << i;
+                return 0;
+            }
+        }
+        for (i = 2; i <= max_coef; i++) ///Verificam cele 3 conditii din criteriul lui Eisenstein
+        {
+            nr = 0;
+            for (d = 2; d <= i / 2; d++) /// Luam un numar prim ca sa verificam conditiile
+            {
+                if (i % d == 1)
+                    nr = 1;
+            }
+            if (nr == 0) ///Am gasit un numar prim, verificam
+            {
+                a = 0;
+                b = 0;
+                c = 0;
+                for (j = 0; j < nr_monoame; j++)
+                {
+                    k = m[j].get_grad();
+                    h = m[j].get_coef();
+                    if (k != max_grad) /// Verificare daca in afara de coeficientul gradului maxim divide i, care este numarul prim
+                        if (h % i == 0)
+                            c++;
+                    if (k == max_grad) /// Verificare daca coeficientul gradului maxim divide sau nu pe i
+                        if (h % i != 0)
+                            b = 1;
+                    if (k == min_grad) /// Verificare daca coficientul gradului minim divide sau nu pe i*i
+                        if (h % (i * i) != 0)
+                            a = 1;
+                }
+
+                if (c == nr_monoame - 1 || b == 0 || a == 0) /// Daca cele 3 conditii nu sunt indeplinite, intoarcem 0.
+                {
+                    ///cout << "Polinomul nu este ireductibil.\n";
+                    return 0;
+                }
+            }
+        }
+        cout << endl;
+        return 1; /// Totul a decurs bine si criteriul lui Eisenstein este verificat, intoarcem 1.
+    }
+};
+
+polinom_ireductibil::polinom_ireductibil(int nr_monoame = 0, monom* m = 0) :polinom(nr_monoame, m)
+{
+}
+
+polinom_ireductibil::~polinom_ireductibil()
+{
+}
+
+void polinom_ireductibil::citire(istream& in)
+{
+    polinom::citire(in);
+}
+void polinom_ireductibil::afisare(ostream& out)
+{
+    polinom::afisare(out);
+}
+istream& operator>>(istream& in, polinom_ireductibil& p)
+{
+    p.citire(in);
+    return in;
+}
+
+ostream& operator<<(ostream& out, polinom_ireductibil& p)
+{
+    p.afisare(out);
+    return out;
+}
+
+
+///=========================Polinom_reductibil = a doua clasa derivata a clasei de baza Polinom ------------------------------
+
+
+class polinom_reductibil :public polinom
+{
+public:
+    polinom_reductibil(int, monom*);
+    ~polinom_reductibil();
+
+    virtual void citire(istream& in);
+    virtual void afisare(ostream& out);
+
+    friend istream& operator>>(istream&, polinom_reductibil&);
+    friend ostream& operator<<(ostream&, polinom_reductibil&);
+
+    void swap(monom* xp, monom* yp)
+    {
+        monom temp = *xp;
+        *xp = *yp;
+        *yp = temp;
+    }
+
+    void bubbleSort(int nr_monoame, monom* m)
+    {
+        int i, j;
+        for (i = 0; i < nr_monoame - 1; i++)
+            for (j = 0; j < nr_monoame - i - 1; j++)
+                if (m[j].get_grad() > m[j + 1].get_grad())
+                    swap(&m[j], &m[j + 1]);
+    }
+
+    void Doua_polinoame(int monoame, monom* m)
+    {
+        monom* v = new monom[nr_monoame], * z = new monom[2];
+        int min_grad;
+        int coef_grad_min;
+        int i, j, k, solutie = 0, sunu = 0, sdoi = 0, h = 0, x;
+
+        bubbleSort(nr_monoame, m);
+        coef_grad_min = m[0].get_coef();
+        min_grad = m[0].get_grad();
+
+        if (coef_grad_min < 0)
+            coef_grad_min = (-1) * coef_grad_min;
+        for (i = 1; i <= coef_grad_min; i++)
+        {
+            if (coef_grad_min % i == 0)
+                for (j = 0; j < nr_monoame; j++)
+                {
+                    sunu = sunu + m[j].get_coef() * pow(i, m[j].get_grad());
+                    i = i * (-1);
+                    sdoi = sdoi + m[j].get_coef() * pow(i, m[j].get_grad());
+                    i = i * (-1);
+
+                }
+            if (sdoi == 0)
+            {
+                i = i * (-1);
+                solutie = i;
+                break;
+            }
+            if (sunu == 0)
+            {
+                solutie = i;
+                break;
+            }
+        }
+
+        h = h + m[nr_monoame - 1].get_coef() * solutie + m[nr_monoame - 2].get_coef();
+        k = m[nr_monoame - 1].get_coef();
+        v[nr_monoame - 2].set_coef(k);
+        k = m[nr_monoame - 2].get_grad();
+        v[nr_monoame - 2].set_grad(k);
+        for (i = nr_monoame - 2; i > 0; i--)
+        {
+
+            v[i - 1].set_coef(h);
+            k = m[i - 1].get_grad();
+            v[i - 1].set_grad(k);
+            h = solutie * h + m[i - 1].get_coef();
+        }
+
+        for (i = 0; i < nr_monoame - 2; i++)
+            cout << v[i] << " ";
+    }
+
+};
+
+polinom_reductibil::polinom_reductibil(int nr_monoame = 0, monom* m = 0) :polinom(nr_monoame, m)
+{
+}
+
+polinom_reductibil::~polinom_reductibil()
+{
+}
+
+void polinom_reductibil::citire(istream& in)
+{
+    polinom::citire(in);
+}
+void polinom_reductibil::afisare(ostream& out)
+{
+    polinom::afisare(out);
+}
+istream& operator>>(istream& in, polinom_reductibil& p)
+{
+    p.citire(in);
+    return in;
+}
+
+ostream& operator<<(ostream& out, polinom_reductibil& p)
+{
+    p.afisare(out);
+    return out;
+}
+
+#include <stdio.h>
+void menu_output()
+{
+    printf("\n Nume Prenume Grupa - Proiect - Nume proiect: \n");
+    printf("\n\t MENIU:");
+    printf("\n===========================================\n");
+    printf("\n");
+    printf("1. Citim polinoame");
+    printf("\n");
+    printf("2. Afisam polinoame");
+    printf("\n");
+    printf("3. Verificam daca polinomul este ireductibil.");
+    printf("\n");
+    printf("4. Daca polinomul este reductibil, afisam doua polinoame, care inmultite dau polinomul citit.");
+    printf("\n");
+    printf("0. Iesire.");
+    printf("\n");
+}
+void menu()
+{
+    polinom *p = new polinom[100];
+    int nr,i;
+    polinom_ireductibil *m = (polinom_ireductibil*) new polinom;
+    polinom_reductibil *k = (polinom_reductibil*) new polinom;
+
+    int option;///optiunea aleasa din meniu
+    option=0;
+
+    do
+    {
+        menu_output();
+
+        printf("\nIntroduceti numarul actiunii: ");
+        scanf("%d", &option);
+
+        if (option==1)
+        {
+            cout<<"Cate polinoame citit?: ";
+            cin>>nr;
+
+            for(int i=0; i<nr; i++)
+            {
+                cin>>p[i];
+                cout<<endl;
+            }
+
+            cout<<endl;
+
+        }
+        if (option==2)
+        {
+            for(int i=0; i<nr; i++)
+            {
+                cout<<p[i];
+                cout<<endl;
+            }
+
+            cout<<endl;
+        }
+        if (option==3)
+        {
+
+
+            for(i = 0; i<nr; i++)
+            {
+                if(m->Eisenstein(p[i].get_nr_monoame(), p[i].get_m()) == 1)
+                    cout<<"Polinomul "<<i+1<<" este ireductibil.\n";
+                else
+                    cout<<"Polinomul "<<i+1<<" este reductibil.\n";
+            }
+        }
+        if (option==4)
+        {
+
+
+            for(i = 0; i<nr; i++)
+            {
+                if(m->Eisenstein(p[i].get_nr_monoame(), p[i].get_m()) == 1)
+                    k->Doua_polinoame(p[i].get_nr_monoame(), p[i].get_m());
+            }
+        }
+        if (option==5)
+        {
+            ///----||---- 5
+        }
+        if (option==0)
+        {
+            printf("\nEXIT!\n");
+        }
+        if (option<0||option>5)
+        {
+            printf("\nSelectie invalida\n");
+        }
+        printf("\n");
+        system("pause"); ///Pauza - Press any key to continue...
+        system("cls");   ///Sterge continutul curent al consolei
+    }
+    while(option!=0);
+}
+int main()
+{
+    ///READ ME, PLEASE!!!!!!!!!!!!!!!:
+
+    /// In clasa derivata, polinom_reductibil, am creat functia de aflare a doua polinoame care inmultite dau polinomul nostru, problema e ca nu afiseaza nimic,
+    /// dar daca declar un obiect din clasa derivata polinom_reductibil si aplic pe functia Doua_polinoame, imi afiseaza...
+
+    ///Citirea polinoamelor nu am facut-o sa depaseasca anumite trucuri si anume un exemplu: daca scriu doua sau mai multe monoame cu acelasi grad, o sa le afiseze separat.
+
+
+    menu();
+    return 0;
+}
